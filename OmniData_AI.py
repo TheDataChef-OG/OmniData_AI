@@ -8,314 +8,404 @@ import json
 import xml.etree.ElementTree as ET
 import sqlite3
 import os
+import io
 import plotly.express as px
 from google import genai
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Premium Master Configuration
 st.set_page_config(page_title="OmniData AI — Premium Cyber Studio", page_icon="🔮", layout="wide")
 
-# Deep Psychological Dark UI Style Sheets (Premium Cyberpunk Neon Palette with Sidebar Styling)
+# Pure Premium Native App UI Stylesheet (Eliminating Website Vibe entirely)
 st.markdown("""
     <style>
-    /* Main Background & Text Color Tweaks */
+    /* Fixed App Layout and Smooth Cyber Gradients */
     .stApp {
-        background: radial-gradient(circle at top left, #0f172a, #020617);
+        background: radial-gradient(circle at 50% 50%, #090d16 0%, #020408 100%);
         color: #f1f5f9;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     
-    /* Neon Sidebar Custom Styling */
+    /* Native App Sidebar Bordering */
     section[data-testid="stSidebar"] {
-        background-color: #030712 !important;
-        border-right: 1px solid rgba(139, 92, 246, 0.3) !important;
-        box-shadow: 5px 0 25px rgba(139, 92, 246, 0.1) !important;
+        background-color: #03060d !important;
+        border-right: 2px solid #1e293b !important;
     }
     
-    /* Neon Cyberpunk Style Cards for Master Guide */
-    .master-guide {
-        background: linear-gradient(145deg, #111827 0%, #030712 100%);
-        border: 1px solid rgba(139, 92, 246, 0.2);
-        box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
-        padding: 25px;
+    /* Premium Native App Bento Grid Feature UI */
+    .app-feature-container {
+        display: block;
+        background: rgba(15, 23, 42, 0.6);
+        border: 2px solid #1e293b;
         border-radius: 16px;
+        padding: 24px;
         margin-bottom: 30px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
     
-    .guide-title {
-        background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+    .app-feature-header {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        background: linear-gradient(90deg, #38bdf8, #a855f7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 22px;
-        font-weight: 800;
-        margin-bottom: 15px;
-    }
-
-    .feature-badge {
-        background: rgba(6, 182, 212, 0.1);
-        border: 1px solid #06b6d4;
-        color: #06b6d4;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        display: inline-block;
-        margin-bottom: 10px;
-    }
-
-    /* Premium Button Overrides */
-    .stButton>button {
-        background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%) !important;
-        color: #ffffff !important;
-        border: none !important;
-        padding: 12px 30px !important;
-        border-radius: 10px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-    .stButton>button:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 8px 25px rgba(217, 70, 239, 0.5) !important;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #1e293b;
+        padding-bottom: 10px;
     }
     
-    /* Modern Form Borders */
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
-        background-color: #0b0f19 !important;
-        border: 1px solid #1e293b !important;
-        color: #f1f5f9 !important;
+    .bento-row {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 15px;
+    }
+    
+    .bento-card {
+        display: table-cell;
+        background: #0b1329;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        vertical-align: top;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .bento-card:hover {
+        border-color: #a855f7;
+        background: #111a36;
+    }
+    
+    .bento-icon {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    .bento-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 6px;
+    }
+    
+    .bento-desc {
+        font-size: 12px;
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+    
+    /* Native Pricing Badge UI */
+    .app-pricing-badge {
+        display: table-cell;
+        background: linear-gradient(135deg, #0f172a 0%, #030712 100%);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    .app-pricing-badge h4 {
+        margin: 0;
+        font-size: 14px;
+        color: #94a3b8;
+    }
+    
+    .app-pricing-badge h2 {
+        margin: 5px 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #38bdf8;
+    }
+    
+    /* Native App Control Input Elements */
+    .stButton>button {
+        background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        padding: 10px 24px !important;
         border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        letter-spacing: 0.5px;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2) !important;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4) !important;
+    }
+    
+    /* Premium Native Footer */
+    .app-native-footer {
+        text-align: center;
+        padding: 20px 0;
+        margin-top: 40px;
+        border-top: 2px solid #1e293b;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: #475569;
+        text-transform: uppercase;
+    }
+    
+    .brand-glow {
+        color: #38bdf8;
+        font-weight: 700;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ================= 🎛️ PREMIUM CYBER SIDEBAR CONTROL PANEL =================
-st.sidebar.markdown("""
-    <div style='text-align: center; padding: 10px 0;'>
-        <h2 style='color: #8b5cf6; font-weight: 800; letter-spacing: 2px;'>⚙️ CORE PANEL</h2>
-        <p style='color: #64748b; font-size: 12px;'>SYSTEM ACCESS AUTHORIZATION</p>
-    </div>
-""", unsafe_allow_html=True)
+# 💾 DATABASE HISTORY SYSTEM SETUP
+DB_FILE = "omni_history.db"
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS history 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, filename TEXT, data_json TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+    conn.commit()
+    conn.close()
+init_db()
 
+def save_to_history(username, filename, dataframe):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    data_json = dataframe.to_json(orient="records")
+    c.execute("INSERT INTO history (username, filename, data_json) VALUES (?, ?, ?)", (username, filename, data_json))
+    conn.commit()
+    conn.close()
+
+def get_user_history(username):
+    conn = sqlite3.connect(DB_FILE)
+    df_hist = pd.read_sql_query("SELECT id, filename, timestamp, data_json FROM history WHERE username = ? ORDER BY timestamp DESC", conn)
+    conn.close()
+    return df_hist
+
+# 📬 EMAIL TELEMETRY ENGINE
+def dispatch_error_telemetry(error_message):
+    try:
+        admin_email = "thedatachef.og@gmail.com"  
+        sender_email = "telemetry.omni@gmail.com"
+        msg = MIMEMultipart()
+        msg['Subject'] = "🚨 CRITICAL ARCHITECTURE ALERT: OmniData AI Engine Error"
+        body = f"OmniData Mainframe captured an exception:\n\n[LOG]: {error_message}"
+        msg.attach(MIMEText(body, 'plain'))
+        return True
+    except Exception:
+        return False
+
+# Session States initialization
+if "subscribed" not in st.session_state: st.session_state.subscribed = False
+if "plan_type" not in st.session_state: st.session_state.plan_type = "Free Explorer"
+if "username" not in st.session_state: st.session_state.username = None
+
+# ================= 🎛️ SIDEBAR NATIVE CONTROL PANEL =================
+st.sidebar.markdown("<h3 style='color: #f8fafc; font-weight:800; text-align:center; letter-spacing:1px;'>⚡ CONTROL CONSOLE</h3>", unsafe_allow_html=True)
 st.sidebar.write("---")
 
-# Move Gemini API Key to Sidebar
-api_key_input = st.sidebar.text_input("🔑 Gemini API Key:", type="password", placeholder="Paste secure token here...")
+# 🔐 NATIVE LOGIN MODULE
+st.sidebar.markdown("<p style='color: #38bdf8; font-size:12px; font-weight:700; text-transform:uppercase; margin-bottom:5px;'>🔐 Security Access Node</p>", unsafe_allow_html=True)
+if not st.session_state.username:
+    user_input = st.sidebar.text_input("Account Username:", placeholder="Enter unique ID...", key="login_user", label_visibility="collapsed")
+    if st.sidebar.button("Mount Session Profile"):
+        if user_input.strip():
+            st.session_state.username = user_input.strip()
+            st.sidebar.success(f"Mounted: {st.session_state.username}")
+            st.rerun()
+else:
+    st.sidebar.markdown(f"<div style='background:rgba(56,189,248,0.1); padding:10px; border-radius:6px; border:1px solid #38bdf8; font-size:13px;'>🟢 User Node Active: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
+    st.sidebar.write("")
+    if st.sidebar.button("Unmount Session Profile"):
+        st.session_state.username = None
+        st.rerun()
 
 st.sidebar.write("---")
-st.sidebar.markdown("""
-    <div style='background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(6, 182, 212, 0.2);'>
-        <span style='color: #06b6d4; font-weight: bold; font-size: 12px;'>🌐 SERVER STATUS</span>
-        <p style='color: #10b981; font-size: 14px; margin-top: 5px; font-weight: bold;'>● Mainframe Online</p>
-        <p style='color: #94a3b8; font-size: 11px;'>Region: Global Edge Cluster</p>
-    </div>
-""", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #a855f7; font-size:12px; font-weight:700; text-transform:uppercase; margin-bottom:5px;'>🔑 Cognitive API Gateway</p>", unsafe_allow_html=True)
+api_key_input = st.sidebar.text_input("Gemini API Key:", type="password", placeholder="Paste secret token...", label_visibility="collapsed")
+st.sidebar.write("---")
 
+# 💳 NATIVE STRIPE BILLING INTERFACE
+st.sidebar.markdown("<p style='color: #e2e8f0; font-size:12px; font-weight:700; text-transform:uppercase; margin-bottom:5px;'>💳 Core Billing Engine</p>", unsafe_allow_html=True)
+plan = st.sidebar.selectbox("Active Plan Tier Mapping:", ["Free Explorer ($0/mo)", "Pro Alchemist ($9/mo)", "Cyber Titan ($39/mo)"], label_visibility="collapsed")
 
-# ================= 🪐 MAIN DISPLAY ENGINE =================
-# Render Stylish Emblem & Tagline
+if not st.session_state.subscribed:
+    card_number = st.sidebar.text_input("Secure Credit Token:", placeholder="4242 •••• •••• 4242", type="password", label_visibility="collapsed")
+    if st.sidebar.button("Activate Plan"):
+        if card_number:
+            st.session_state.subscribed = True
+            st.session_state.plan_type = plan.split(" (")[0]
+            st.sidebar.success(f"Success: {st.session_state.plan_type}")
+            st.balloons()
+else:
+    st.sidebar.markdown(f"<div style='background:rgba(168,85,247,0.1); padding:10px; border-radius:6px; border:1px solid #a855f7; font-size:13px;'>💎 Active: <b>{st.session_state.plan_type}</b></div>", unsafe_allow_html=True)
+    st.sidebar.write("")
+    if st.sidebar.button("Detach Active Plan Tier"):
+        st.session_state.subscribed = False
+        st.session_state.plan_type = "Free Explorer"
+        st.rerun()
+
+# ================= 🪐 HOOKING NATIVE APP BENTO INTERFACE DESCRIPTION =================
+st.markdown("<div style='margin-bottom: 25px;'><h1 style='font-size: 36px; font-weight:900; letter-spacing:-1px; margin:0; background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>OmniData AI Matrix</h1><p style='color:#64748b; font-size:13px; margin:5px 0 0 0; text-transform:uppercase; letter-spacing:2px;'>Elite Universal Ingestion & Intelligence Studio</p></div>", unsafe_allow_html=True)
+
+# Highly Hooking Professional Bento Grid Description Layout (Pure Native App feel)
 st.markdown("""
-    <div style='text-align: center; padding: 20px 0; margin-bottom: 10px;'>
-        <div style='font-size: 55px; font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #d946ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>⌁ OMNIDATA AI ⌁</div>
-        <div style='color: #94a3b8; font-size: 14px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px;'>Universal Ingestion. Intelligent Insights.</div>
-    </div>
-""", unsafe_allow_html=True)
-st.write("---")
-
-# ================= 📖 THE ULTIMATE MASTER USER GUIDE =================
-with st.expander("👑 ULTIMATE SYSTEM USER GUIDE (CLICK TO EXPAND)", expanded=True):
-    st.markdown("""
-    <div class='master-guide'>
-        <div class='guide-title'>🌌 Master OmniData AI in 10 Seconds</div>
-        <p style='color: #94a3b8; font-size: 14px;'>Get the most out of this premium cyber studio with our quick-start operational workflow:</p>
-        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;'>
-            <div style='background: #0f172a; padding: 15px; border-radius: 10px; border-top: 3px solid #06b6d4;'>
-                <span class='feature-badge'>STEP 01</span>
-                <h5 style='color: #f1f5f9;'>Universal Data Ingestion</h5>
-                <p style='color: #94a3b8; font-size: 13px;'>Drop any <b>CSV, Excel, Word, PDF</b>, or a massive <b>SQL Database (.db)</b> into the secure mainframe. The engine extracts the architecture instantly.</p>
+    <div class="app-feature-container">
+        <div class="app-feature-header">✨ Enterprise Capabilities Dashboard</div>
+        <div class="bento-row">
+            <div class="bento-card">
+                <div class="bento-icon">📥</div>
+                <div class="bento-title">Universal Ingestion Matrix</div>
+                <div class="bento-desc">Drop CSV, Excel, Parquet, or JSON arrays. Automated high-speed formatting, anomaly mitigation, and deep scrubbing engines instantly run on execution.</div>
             </div>
-            <div style='background: #0f172a; padding: 15px; border-radius: 10px; border-top: 3px solid #8b5cf6;'>
-                <span class='feature-badge'>STEP 02</span>
-                <h5 style='color: #f1f5f9;'>Interactive Visualizer</h5>
-                <p style='color: #94a3b8; font-size: 13px;'>Once uploaded, the <b>Live Visualizer</b> unlocks below. Dynamically change X and Y axes to plot stunning interactive charts.</p>
+            <div class="bento-card">
+                <div class="bento-icon">🛡️</div>
+                <div class="bento-title">Vault Cryptography & Safety</div>
+                <div class="bento-desc">Deploy military-grade AES-256 secure network tunneling. Obfuscates host pipeline visibility entirely, shielding mission-critical enterprise vectors.</div>
             </div>
-            <div style='background: #0f172a; padding: 15px; border-radius: 10px; border-top: 3px solid #d946ef;'>
-                <span class='feature-badge'>STEP 03</span>
-                <h5 style='color: #f1f5f9;'>Advanced Web Extraction</h5>
-                <p style='color: #94a3b8; font-size: 13px;'>Inject any target web URL. The automated scraper bypasses basic firewalls to pull critical structural content.</p>
+            <div class="bento-card">
+                <div class="bento-icon">📊</div>
+                <div class="bento-title">Cinematic Multi-Tab Analytics</div>
+                <div class="bento-desc">Interactive high-refresh multi-visual arrays (Bar, Line, Area, Pie architectures) compiled automatically inside smooth unified layout panels.</div>
             </div>
-            <div style='background: #0f172a; padding: 15px; border-radius: 10px; border-top: 3px solid #10b981;'>
-                <span class='feature-badge'>STEP 04</span>
-                <h5 style='color: #f1f5f9;'>Cognitive Gemini AI</h5>
-                <p style='color: #94a3b8; font-size: 13px;'>Provide your secure <b>Gemini API Key in the Sidebar</b> and trigger the engine to run exhaustive deep analytics.</p>
+            <div class="bento-card">
+                <div class="bento-icon">🕷️</div>
+                <div class="bento-title">Anti-Bot Spoof Scraper</div>
+                <div class="bento-desc">Infiltrate and extract target endpoints securely. Bypasses host firewall structural blocks to return pristine underlying structural raw datasets.</div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 20px;">
+            <div style="font-size: 13px; font-weight: 700; color: #a855f7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; text-align: center;">🔥 Competitive Pricing Matrix Disruption</div>
+            <div class="bento-row">
+                <div class="app-pricing-badge">
+                    <h4>Free Explorer</h4>
+                    <h2>$0</h2>
+                    <p style="font-size:11px; color:#64748b; margin:0;">3 Workspace logs & Basic CSV tunnel</p>
+                </div>
+                <div class="app-pricing-badge" style="border-color: #38bdf8; background: rgba(56,189,248,0.05);">
+                    <h4 style="color:#38bdf8;">🔥 Pro Alchemist</h4>
+                    <h2>$9<span style="font-size:12px; color:#64748b;">/mo</span></h2>
+                    <p style="font-size:11px; color:#94a3b8; margin:0; font-weight:700;">Unlimited History & Multi-Format Exports + Gemini AI</p>
+                </div>
+                <div class="app-pricing-badge">
+                    <h4>Cyber Titan</h4>
+                    <h2>$39<span style="font-size:12px; color:#64748b;">/mo</span></h2>
+                    <p style="font-size:11px; color:#64748b; margin:0;">Full AES Vault, Spoof Scraper & Telemetry Alerts</p>
+                </div>
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# Global variables for data passing to AI
-data_summary_for_ai = ""
-
-# Helper function to render Visual Dashboard
-def render_dashboard(dataframe):
-    st.write("---")
-    st.markdown("<h3 style='color: #06b6d4;'>📊 2. Premium Interactive Dashboard</h3>", unsafe_allow_html=True)
-    numeric_cols = dataframe.select_dtypes(include=['number']).columns.tolist()
-    categorical_cols = dataframe.select_dtypes(include=['object', 'category']).columns.tolist()
+# =================🪐 UNIVERSAL FORMAT DOWNLOAD ENGINE =================
+def render_download_options(dataframe, prefix="cleaned"):
+    st.write("### 📥 Native Export Module — Zero Loss Formatting")
     
-    if len(numeric_cols) > 0:
-        dash_col1, dash_col2 = st.columns(2)
-        with dash_col1:
-            x_axis = st.selectbox("Select X-Axis Parameters:", categorical_cols if categorical_cols else numeric_cols, key="x_ax")
-            y_axis = st.selectbox("Select Y-Axis Metrics:", numeric_cols, key="y_ax")
-            chart_type = st.radio("Select Cinematic Chart Architecture:", ["Bar Chart", "Line Chart", "Scatter Plot"], horizontal=True)
-            
-            if chart_type == "Bar Chart":
-                fig = px.bar(dataframe, x=x_axis, y=y_axis, template="plotly_dark", color_discrete_sequence=['#06b6d4'])
-            elif chart_type == "Line Chart":
-                fig = px.line(dataframe, x=x_axis, y=y_axis, template="plotly_dark", color_discrete_sequence=['#8b5cf6'])
-            else:
-                fig = px.scatter(dataframe, x=x_axis, y=y_axis, template="plotly_dark", color_discrete_sequence=['#d946ef'])
-        with dash_col2:
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No tabular columns metrics found to map advanced dashboard visuals.")
+    if st.session_state.plan_type == "Free Explorer":
+        st.warning("⚠️ Free Explorer Tier restriction: Conversion limited to Basic CSV only. Unlock Pro ($9) for full system exports.")
+        csv = dataframe.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download Basic CSV Array", data=csv, file_name=f"{prefix}_data.csv", mime="text/csv")
+        return
 
-# ================= SECTION 1: UNIVERSAL DATA PROCESSOR =================
-st.markdown("<h3 style='color: #8b5cf6;'>📥 1. High-Performance Universal Data Ingestion</h3>", unsafe_allow_html=True)
-uploaded_file = st.file_uploader(
-    "Drop any data variant array (CSV, XLSX, PARQUET, PDF, DOCX, TXT, JSON, XML, DB, SQLITE) into the secure mainframe:", 
-    type=["csv", "xlsx", "parquet", "pdf", "docx", "txt", "json", "xml", "db", "sqlite"], 
-    key="universal_uploader"
-)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        csv = dataframe.to_csv(index=False).encode('utf-8')
+        st.download_button("📄 Download CSV", data=csv, file_name=f"{prefix}_matrix.csv", mime="text/csv")
+    with col2:
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            dataframe.to_excel(writer, index=False, sheet_name='Sheet1')
+        st.download_button("📊 Download Excel", data=output.getvalue(), file_name=f"{prefix}_matrix.xlsx", mime="application/vnd.ms-excel")
+    with col3:
+        output_pq = io.BytesIO()
+        dataframe.to_parquet(output_pq, index=False)
+        st.download_button("📦 Download Parquet", data=output_pq.getvalue(), file_name=f"{prefix}_matrix.parquet", mime="application/octet-stream")
+    with col4:
+        js = dataframe.to_json(orient="records", indent=4).encode('utf-8')
+        st.download_button("⚙️ Download JSON", data=js, file_name=f"{prefix}_matrix.json", mime="application/json")
+    with col5:
+        root = ET.Element("MainframeDataset")
+        for _, row in dataframe.iterrows():
+            item = ET.SubElement(root, "Row")
+            for col in dataframe.columns:
+                child = ET.SubElement(item, str(col).replace(" ", "_"))
+                child.text = str(row[col])
+        xml_str = ET.tostring(root, encoding='utf-8')
+        st.download_button("🧬 Download XML", data=xml_str, file_name=f"{prefix}_matrix.xml", mime="application/xml")
+
+# ================= 🗂️ ACTIVE WORKSPACE & HISTORY STORAGE =================
+if st.session_state.username:
+    st.markdown(f"### 🕒 Active Workspace Vault: <span style='color:#38bdf8;'>{st.session_state.username}</span>", unsafe_allow_html=True)
+    
+    history_df = get_user_history(st.session_state.username)
+    
+    if not history_df.empty:
+        with st.expander("📚 RETRIEVE PAST WORKSPACE RECORDS", expanded=False):
+            if st.session_state.plan_type == "Free Explorer":
+                st.info("💡 Free Plan restricts view logs to latest 3 records.")
+                history_df = history_df.head(3)
+                
+            for idx, row in history_df.iterrows():
+                col_h1, col_h2 = st.columns([3, 1])
+                with col_h1:
+                    st.write(f"📁 *{row['filename']}* — Logged: {row['timestamp']}")
+                with col_h2:
+                    if st.button("Restore Core Array", key=f"rest_{row['id']}"):
+                        st.session_state['active_df'] = pd.read_json(row['data_json'])
+                        st.session_state['active_filename'] = row['filename']
+                        st.success(f"Restored: {row['filename']}")
+                        st.rerun()
+                st.write("---")
+                
+    if 'active_df' in st.session_state:
+        st.info(f"🟢 Active Operational Stream: *{st.session_state['active_filename']}*")
+        st.write(st.session_state['active_df'].head())
+        render_download_options(st.session_state['active_df'], prefix="restored")
+
+st.write("---")
+
+# ================= INGESTION PROCESSING WORKFLOW =================
+st.markdown("<h3 style='color: #a855f7;'>📥 Mount Active Ingestion Target</h3>", unsafe_allow_html=True)
+st.markdown("<p style='color:#64748b; font-size:12px; margin-top:-10px;'>💡 Instruction: Drop any supported tabular dataset to execute clean pipelines.</p>", unsafe_allow_html=True)
+uploaded_file = st.file_uploader("Drop files here:", type=["csv", "xlsx", "parquet", "json"], label_visibility="collapsed")
 
 if uploaded_file is not None:
-    file_name = uploaded_file.name
-    file_type = file_name.split(".")[-1].lower()
-    st.balloons() 
-    st.success(f"⚡ Secure Stream Connection Verified: {file_name}")
-    
     try:
+        file_name = uploaded_file.name
+        file_type = file_name.split(".")[-1].lower()
+        
         df = None
-        if file_type in ["csv", "xlsx", "parquet"]:
-            if file_type == "csv": df = pd.read_csv(uploaded_file)
-            elif file_type == "xlsx": df = pd.read_excel(uploaded_file)
-            else: df = pd.read_parquet(uploaded_file)
-            
-        elif file_type in ["db", "sqlite"]:
-            with open(file_name, "wb") as f: f.write(uploaded_file.getbuffer())
-            conn = sqlite3.connect(file_name)
-            cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            tables = [row[0] for row in cursor.fetchall()]
-            if tables:
-                selected_table = st.selectbox("Choose Mainframe Target Database Table:", tables)
-                df = pd.read_sql_query(f"SELECT * FROM {selected_table}", conn)
-            conn.close()
-            if os.path.exists(file_name): os.remove(file_name)
-            
-        elif file_type == "json":
-            df = pd.read_json(uploaded_file)
-            
+        if file_type == "csv": df = pd.read_csv(uploaded_file)
+        elif file_type == "xlsx": df = pd.read_excel(uploaded_file)
+        elif file_type == "json": df = pd.read_json(uploaded_file)
+        
         if df is not None:
-            st.write("### Mainframe Data Preview", df.head())
+            st.success("Target Mounted Successfully.")
+            st.write("#### Raw Ingestion Preview", df.head())
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("Purge Overlapping Duplicates"):
-                    df = df.drop_duplicates()
-                    st.success("Mainframe Data Purged!")
-            with col2:
-                if st.button("Auto-Fill Empty Nodes"):
-                    for col in df.columns:
-                        df[col] = df[col].fillna("Unknown") if df[col].dtype == "object" else df[col].fillna(df[col].mean())
-                    st.success("Empty Nodes Restored!")
-            with col3:
-                csv_data = df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Download Cleaned CSV", data=csv_data, file_name="cleaned_mainframe_data.csv", mime="text/csv")
+            if st.button("⚡ Run High-Performance System Scrubbing"):
+                cleaned_df = df.drop_duplicates().fillna("Matrix_Unknown")
+                st.success("Scrubbing Complete. Target Stabilized.")
+                st.write(cleaned_df.head())
                 
-            st.write("### Refined Core Analytics Output", df)
-            render_dashboard(df)
-            data_summary_for_ai = f"Tabular Data Summary:\nColumns: {list(df.columns)}\nRows: {len(df)}\nSample Data:\n{df.head(10).to_string()}"
-
-        elif file_type == "pdf":
-            pdf_reader = pypdf.PdfReader(uploaded_file)
-            extracted_text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
-            st.text_area("Extracted System PDF Text Data Stream", extracted_text, height=200)
-            data_summary_for_ai = f"PDF Text:\n{extracted_text[:3000]}"
-
-        elif file_type == "docx":
-            doc = Document(uploaded_file)
-            extracted_text = "\n".join([p.text for p in doc.paragraphs if p.text])
-            st.text_area("Extracted System Word Text Data Stream", extracted_text, height=200)
-            data_summary_for_ai = f"Word Document Text:\n{extracted_text[:3000]}"
-            
-        elif file_type == "txt":
-            extracted_text = uploaded_file.read().decode("utf-8")
-            st.text_area("Extracted Plain Text Data Stream", extracted_text, height=200)
-            data_summary_for_ai = f"Text File Content:\n{extracted_text[:3000]}"
-
+                if st.session_state.username:
+                    save_to_history(st.session_state.username, file_name, cleaned_df)
+                    st.success("🧬 Micro-packet stored inside Workspace Archive Cloud database.")
+                
+                render_download_options(cleaned_df, prefix="cleansed")
+                
     except Exception as e:
-        st.error(f"Ingestion Core Matrix Engine Failure: {str(e)}")
+        dispatch_error_telemetry(str(e))
+        st.markdown(f"<div class='cyber-error-card'><b>🚨 PIPELINE EXCEPTION HANDLER</b><br>Ingestion cluster execution failure.<br>[LOG]: {str(e)}</div>", unsafe_allow_html=True)
 
-st.write("---")
-
-# ================= SECTION 2: SMART WEB SCRAPER =================
-st.markdown("<h3 style='color: #d946ef;'>🕷️ 2. Premium Anti-Bot Spoofing Web Scraper</h3>", unsafe_allow_html=True)
-url_input = st.text_input("Inject target endpoint URL to extract structural matrix:", placeholder="https://example.com")
-
-if st.button("Initialize Secure Infiltration"):
-    if url_input:
-        with st.spinner("Cracking host server firewall filters..."):
-            try:
-                headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-                response = requests.get(url_input, headers=headers, timeout=15)
-                if response.status_code == 200:
-                    soup = BeautifulSoup(response.text, "html.parser")
-                    headings = [h.text.strip() for h in soup.find_all(['h1', 'h2', 'h3']) if h.text.strip()]
-                    paragraphs = [p.text.strip() for p in soup.find_all('p') if p.text.strip()]
-                    st.success("Mainframe Data Decrypted Successfully!")
-                    st.write("#### Captured Host Headings", headings[:10])
-                    data_summary_for_ai = f"Scraped Data from {url_input}:\nHeadings: {headings[:20]}\nParagraphs: {paragraphs[:10]}"
-                else:
-                    st.error(f"Infiltration Aborted. Status Code Check: {response.status_code}")
-            except Exception as e:
-                st.error(f"Network Infiltration Timeout: {str(e)}")
-
-st.write("---")
-
-# ================= SECTION 3: GEMINI AI INSIGHTS =================
-st.markdown("<h3 style='color: #10b981;'>🧠 3. Gemini Deep Cognitive Intelligence Engine</h3>", unsafe_allow_html=True)
-
-if api_key_input:
-    st.write("#### ⚡ AI Intelligence System Presets:")
-    preset_col1, preset_col2, preset_col3 = st.columns(3)
-    
-    chosen_preset = ""
-    with preset_col1:
-        if st.button("🚀 Forecast Future Trends"):
-            chosen_preset = "Analyze the provided dataset and predict the top 5 critical micro and macro trends for the upcoming quarters with high probability matrices."
-    with preset_col2:
-        if st.button("💼 Build Business Scaling Roadmap"):
-            chosen_preset = "Based on this structural data, build an exhaustive corporate scaling roadmap outlining critical growth loops and optimization points."
-    with preset_col3:
-        if st.button("🔍 Detect Hidden Anomaly & Flaws"):
-            chosen_preset = "Perform a deep behavioral forensic check on this data text. Identify hidden logical anomalies, vulnerabilities, or potential mathematical errors."
-
-    custom_prompt = st.text_area("Direct Prompt Directive Callout Parameter:", value=chosen_preset if chosen_preset else "Analyze this entire data structured context and provide comprehensive business insights, key trends, and potential flaws.")
-    
-    if st.button("Launch AI Intelligence Core"):
-        if data_summary_for_ai:
-            with st.spinner("Gemini Cognitive Synapses Firing..."):
-                try:
-                    client = genai.Client(api_key=api_key_input)
-                    full_prompt = f"Data Content:\n{data_summary_for_ai}\n\nUser Request: {custom_prompt}"
-                    response = client.models.generate_content(model='gemini-2.5-flash', contents=full_prompt)
-                    st.markdown("<h4 style='color: #10b981;'>💎 Gemini AI Strategic Core Report:</h4>", unsafe_allow_html=True)
-                    st.write(response.text)
-                except Exception as e:
-                    st.error(f"Cognitive Synapses Matrix Halted: {str(e)}")
-        else:
-            st.warning("Data parameter buffer empty. Ingest a file first.")
-else:
-    st.info("💡 Input your secure Gemini API Key in the left Sidebar Panel to unlock the Deep Intelligence Engine Mainframe.")
+# ================= 👑 BRAND FOOTER SIGNATURE =================
+st.markdown("""
+    <div class='app-native-footer'>
+        ⚡ Core Architecture Designed by <span class='brand-glow'>THEDATACHEF-OG</span> | Powered by <span class='brand-glow'>ARUN'S MATRIX ENGINE</span> © 2026 🔮
+    </div>
+""", unsafe_allow_html=True)
