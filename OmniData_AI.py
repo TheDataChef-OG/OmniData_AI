@@ -14,7 +14,7 @@ from google import genai
 # Premium Master Configuration
 st.set_page_config(page_title="OmniData AI — Premium Cyber Studio", page_icon="🔮", layout="wide")
 
-# Deep Psychological Dark UI Style Sheets (Premium Cyberpunk Neon Palette)
+# Deep Psychological Dark UI Style Sheets (Premium Cyberpunk Neon Palette with Sidebar Styling)
 st.markdown("""
     <style>
     /* Main Background & Text Color Tweaks */
@@ -22,6 +22,13 @@ st.markdown("""
         background: radial-gradient(circle at top left, #0f172a, #020617);
         color: #f1f5f9;
         font-family: 'Inter', sans-serif;
+    }
+    
+    /* Neon Sidebar Custom Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #030712 !important;
+        border-right: 1px solid rgba(139, 92, 246, 0.3) !important;
+        box-shadow: 5px 0 25px rgba(139, 92, 246, 0.1) !important;
     }
     
     /* Neon Cyberpunk Style Cards for Master Guide */
@@ -82,6 +89,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ================= 🎛️ PREMIUM CYBER SIDEBAR CONTROL PANEL =================
+st.sidebar.markdown("""
+    <div style='text-align: center; padding: 10px 0;'>
+        <h2 style='color: #8b5cf6; font-weight: 800; letter-spacing: 2px;'>⚙️ CORE PANEL</h2>
+        <p style='color: #64748b; font-size: 12px;'>SYSTEM ACCESS AUTHORIZATION</p>
+    </div>
+""", unsafe_allow_html=True)
+
+st.sidebar.write("---")
+
+# Move Gemini API Key to Sidebar
+api_key_input = st.sidebar.text_input("🔑 Gemini API Key:", type="password", placeholder="Paste secure token here...")
+
+st.sidebar.write("---")
+st.sidebar.markdown("""
+    <div style='background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(6, 182, 212, 0.2);'>
+        <span style='color: #06b6d4; font-weight: bold; font-size: 12px;'>🌐 SERVER STATUS</span>
+        <p style='color: #10b981; font-size: 14px; margin-top: 5px; font-weight: bold;'>● Mainframe Online</p>
+        <p style='color: #94a3b8; font-size: 11px;'>Region: Global Edge Cluster</p>
+    </div>
+""", unsafe_allow_html=True)
+
+
+# ================= 🪐 MAIN DISPLAY ENGINE =================
 # Render Stylish Emblem & Tagline
 st.markdown("""
     <div style='text-align: center; padding: 20px 0; margin-bottom: 10px;'>
@@ -91,7 +122,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.write("---")
 
-# ================= 📖 THE ULTIMATE MASTER USER GUIDE (INTERNATIONALIZED) =================
+# ================= 📖 THE ULTIMATE MASTER USER GUIDE =================
 with st.expander("👑 ULTIMATE SYSTEM USER GUIDE (CLICK TO EXPAND)", expanded=True):
     st.markdown("""
     <div class='master-guide'>
@@ -116,7 +147,7 @@ with st.expander("👑 ULTIMATE SYSTEM USER GUIDE (CLICK TO EXPAND)", expanded=T
             <div style='background: #0f172a; padding: 15px; border-radius: 10px; border-top: 3px solid #10b981;'>
                 <span class='feature-badge'>STEP 04</span>
                 <h5 style='color: #f1f5f9;'>Cognitive Gemini AI</h5>
-                <p style='color: #94a3b8; font-size: 13px;'>Provide your secure <b>Gemini API Key</b> and trigger the engine to run exhaustive deep analytics, predictions, and predictive modeling.</p>
+                <p style='color: #94a3b8; font-size: 13px;'>Provide your secure <b>Gemini API Key in the Sidebar</b> and trigger the engine to run exhaustive deep analytics.</p>
             </div>
         </div>
     </div>
@@ -166,7 +197,6 @@ if uploaded_file is not None:
     
     try:
         df = None
-        # Handle Tabular Architectures
         if file_type in ["csv", "xlsx", "parquet"]:
             if file_type == "csv": df = pd.read_csv(uploaded_file)
             elif file_type == "xlsx": df = pd.read_excel(uploaded_file)
@@ -187,7 +217,6 @@ if uploaded_file is not None:
         elif file_type == "json":
             df = pd.read_json(uploaded_file)
             
-        # Display and Clean Data if it's Tabular
         if df is not None:
             st.write("### Mainframe Data Preview", df.head())
             
@@ -209,7 +238,6 @@ if uploaded_file is not None:
             render_dashboard(df)
             data_summary_for_ai = f"Tabular Data Summary:\nColumns: {list(df.columns)}\nRows: {len(df)}\nSample Data:\n{df.head(10).to_string()}"
 
-        # Handle Document Text Streams
         elif file_type == "pdf":
             pdf_reader = pypdf.PdfReader(uploaded_file)
             extracted_text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
@@ -258,7 +286,6 @@ st.write("---")
 
 # ================= SECTION 3: GEMINI AI INSIGHTS =================
 st.markdown("<h3 style='color: #10b981;'>🧠 3. Gemini Deep Cognitive Intelligence Engine</h3>", unsafe_allow_html=True)
-api_key_input = st.text_input("Enter secure Gemini API Key to initialize cognitive matrix:", type="password")
 
 if api_key_input:
     st.write("#### ⚡ AI Intelligence System Presets:")
@@ -275,7 +302,6 @@ if api_key_input:
         if st.button("🔍 Detect Hidden Anomaly & Flaws"):
             chosen_preset = "Perform a deep behavioral forensic check on this data text. Identify hidden logical anomalies, vulnerabilities, or potential mathematical errors."
 
-    # Prompt text area loaded dynamically if a preset is clicked
     custom_prompt = st.text_area("Direct Prompt Directive Callout Parameter:", value=chosen_preset if chosen_preset else "Analyze this entire data structured context and provide comprehensive business insights, key trends, and potential flaws.")
     
     if st.button("Launch AI Intelligence Core"):
@@ -292,4 +318,4 @@ if api_key_input:
         else:
             st.warning("Data parameter buffer empty. Ingest a file first.")
 else:
-    st.info("💡 Input your secure Gemini API Key above to unlock the Deep Intelligence Engine Mainframe Dashboard.") 
+    st.info("💡 Input your secure Gemini API Key in the left Sidebar Panel to unlock the Deep Intelligence Engine Mainframe.")
